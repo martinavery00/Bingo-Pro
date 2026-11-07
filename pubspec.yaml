@@ -1,0 +1,48 @@
+name: bingo_pro
+description: "Offline, print-ready bingo card generator with coverage optimization."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+  crypto: ^3.0.6
+  drift: ^2.30.0
+  drift_flutter: ^0.2.6
+  file_picker: ^10.3.3
+  flutter_riverpod: ^3.0.3
+  path_provider: ^2.1.5
+  # Keep the Android implementation on the pre-JNI line so builds do not
+  # require a full NDK toolchain merely to resolve the app documents folder.
+  path_provider_android: 2.2.17
+  pdf: ^3.11.3
+  printing: ^5.14.2
+  uuid: ^4.5.2
+
+dev_dependencies:
+  build_runner: ^2.10.4
+  drift_dev: ^2.30.0
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/fonts/
+    - assets/licenses/
+  fonts:
+    - family: Atkinson Hyperlegible
+      fonts:
+        - asset: assets/fonts/AtkinsonHyperlegible-Regular.ttf
+        - asset: assets/fonts/AtkinsonHyperlegible-Bold.ttf
+          weight: 700
+    - family: Noto Sans
+      fonts:
+        - asset: assets/fonts/NotoSans.ttf
+    - family: Roboto Slab
+      fonts:
+        - asset: assets/fonts/RobotoSlab.ttf
