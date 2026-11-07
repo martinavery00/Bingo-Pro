@@ -112,6 +112,7 @@ For generator changes, prefer fixed seeds and invariant assertions over snapshot
 ## Host and platform constraints
 
 - Flutter is pinned to 3.47.9; the local SDK is ignored under `.tooling/`.
+- VS Code launches Flutter through an `X:` drive alias created by the pre-launch task. This avoids a Windows native-asset hook quoting bug caused by the space in the workspace path; keep the launch program, working directory, custom Flutter tool, and drive-mapping task on the same alias.
 - Android builds currently use Gradle 8.14.3 with Android Gradle Plugin 8.11.1, the minimum versions accepted by Flutter 3.47.9. Flutter warns that support for these versions will be dropped in a future release; migrate to the Gradle 9/AGP 9 toolchain only after the pinned legacy Android plugins are compatible.
 - The development workspace is on D: while the pub cache is on C:. Kotlin incremental compilation is disabled because its cache path conversion fails across drive roots.
 - The global C: drive is full and contains an incomplete NDK 28.2 installation. The Android project is pinned to installed NDK 26.1.10909125, which successfully builds the current plugins but produces a preferred-version warning.

@@ -7,7 +7,8 @@ build/
 coverage/
 *.iml
 .idea/
-.vscode/
+.vscode/*
+!.vscode/launch.json
 android/.gradle/
 android/local.properties
 ios/Flutter/ephemeral/

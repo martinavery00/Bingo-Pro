@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Bingo Pro (Debug)",
+      "type": "dart",
+      "request": "launch",
+      "program": "X:\\lib\\main.dart",
+      "cwd": "X:\\",
+      "flutterMode": "debug",
+      "preLaunchTask": "Map Bingo Pro workspace to X:",
+      "customTool": "X:\\.tooling\\flutter\\bin\\flutter.bat"
+    }
+  ]
+}
