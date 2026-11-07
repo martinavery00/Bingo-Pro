@@ -1,30 +1,93 @@
 import 'models.dart';
 
+enum PatternTransform {
+  original,
+  rotate90,
+  rotate180,
+  rotate270,
+  mirror,
+  mirrorRotate90,
+  mirrorRotate180,
+  mirrorRotate270,
+}
+
+class PatternVariant {
+  const PatternVariant({required this.transform, required this.cells});
+
+  final PatternTransform transform;
+  final Set<CellPosition> cells;
+}
+
 class PatternService {
   const PatternService();
 
-  List<Set<CellPosition>> expand(PatternDefinition pattern, RuleSet rules) {
-    final variants = <Set<CellPosition>>[pattern.cells];
+  List<Set<CellPosition>> expand(PatternDefinition pattern, RuleSet rules) =>
+      expandVariants(pattern, rules).map((variant) => variant.cells).toList();
+
+  List<PatternVariant> expandVariants(
+    PatternDefinition pattern,
+    RuleSet rules,
+  ) {
+    final rotations = <PatternVariant>[
+      PatternVariant(
+        transform: PatternTransform.original,
+        cells: pattern.cells,
+      ),
+    ];
     if (pattern.includeRotations) {
-      variants.add(_rotate180(pattern.cells, rules.rows, rules.columns));
       if (rules.rows == rules.columns) {
-        variants
-          ..add(_rotate90(pattern.cells, rules.rows))
-          ..add(_rotate270(pattern.cells, rules.rows));
+        rotations.addAll([
+          PatternVariant(
+            transform: PatternTransform.rotate90,
+            cells: _rotate90(pattern.cells, rules.rows),
+          ),
+          PatternVariant(
+            transform: PatternTransform.rotate180,
+            cells: _rotate180(pattern.cells, rules.rows, rules.columns),
+          ),
+          PatternVariant(
+            transform: PatternTransform.rotate270,
+            cells: _rotate270(pattern.cells, rules.rows),
+          ),
+        ]);
+      } else {
+        rotations.add(
+          PatternVariant(
+            transform: PatternTransform.rotate180,
+            cells: _rotate180(pattern.cells, rules.rows, rules.columns),
+          ),
+        );
       }
     }
+
+    final candidates = List<PatternVariant>.from(rotations);
     if (pattern.includeReflections) {
-      final current = List<Set<CellPosition>>.from(variants);
-      variants.addAll(current.map((cells) => _reflect(cells, rules.columns)));
+      for (final variant in rotations) {
+        candidates.add(
+          PatternVariant(
+            transform: _mirroredTransform(variant.transform),
+            cells: _reflect(variant.cells, rules.columns),
+          ),
+        );
+      }
     }
 
-    final unique = <String, Set<CellPosition>>{};
-    for (final cells in variants) {
-      final sorted = cells.map((cell) => cell.key).toList()..sort();
-      unique[sorted.join('|')] = cells;
+    final unique = <String, PatternVariant>{};
+    for (final variant in candidates) {
+      final sorted = variant.cells.map((cell) => cell.key).toList()..sort();
+      unique.putIfAbsent(sorted.join('|'), () => variant);
     }
     return unique.values.toList();
   }
+
+  PatternTransform _mirroredTransform(PatternTransform transform) =>
+      switch (transform) {
+        PatternTransform.original => PatternTransform.mirror,
+        PatternTransform.rotate90 => PatternTransform.mirrorRotate90,
+        PatternTransform.rotate180 => PatternTransform.mirrorRotate180,
+        PatternTransform.rotate270 => PatternTransform.mirrorRotate270,
+        _ => throw ArgumentError.value(transform, 'transform'),
+      };
 
   Set<CellPosition> _rotate90(Set<CellPosition> cells, int size) => cells
       .map((cell) => CellPosition(cell.column, size - 1 - cell.row))

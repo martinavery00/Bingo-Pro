@@ -91,112 +91,10 @@ class PatternsStep extends ConsumerWidget {
     PatternDefinition? existing,
   ) async {
     final project = ref.read(projectEditorProvider)!;
-    final name = TextEditingController(text: existing?.name ?? 'My pattern');
-    var cells = Set<CellPosition>.from(existing?.cells ?? const {});
-    var rotations = existing?.includeRotations ?? false;
-    var reflections = existing?.includeReflections ?? false;
     final result = await showDialog<PatternDefinition>(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(existing == null ? 'New pattern' : 'Edit pattern'),
-          content: SizedBox(
-            width: 420,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: name,
-                    decoration: const InputDecoration(labelText: 'Name'),
-                  ),
-                  const SizedBox(height: 16),
-                  AspectRatio(
-                    aspectRatio: project.rules.columns / project.rules.rows,
-                    child: GridView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: project.rules.columns,
-                      ),
-                      itemCount: project.rules.rows * project.rules.columns,
-                      itemBuilder: (_, index) {
-                        final position = CellPosition(
-                          index ~/ project.rules.columns,
-                          index % project.rules.columns,
-                        );
-                        final selected = cells.contains(position);
-                        return InkWell(
-                          onTap: () => setDialogState(() {
-                            selected
-                                ? cells.remove(position)
-                                : cells.add(position);
-                          }),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: selected
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.surface,
-                              border: Border.all(color: Colors.blueGrey),
-                            ),
-                            child: selected
-                                ? Icon(
-                                    Icons.check,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onPrimary,
-                                  )
-                                : null,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Include rotations'),
-                    subtitle: Text(
-                      project.rules.rows == project.rules.columns
-                          ? 'Includes 90°, 180°, and 270° variants.'
-                          : 'Includes the dimension-preserving 180° variant.',
-                    ),
-                    value: rotations,
-                    onChanged: (value) =>
-                        setDialogState(() => rotations = value),
-                  ),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Include mirrors'),
-                    value: reflections,
-                    onChanged: (value) =>
-                        setDialogState(() => reflections = value),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: cells.isEmpty || name.text.trim().isEmpty
-                  ? null
-                  : () => Navigator.pop(
-                      context,
-                      PatternDefinition(
-                        id: existing?.id ?? const Uuid().v4(),
-                        name: name.text.trim(),
-                        cells: cells,
-                        includeRotations: rotations,
-                        includeReflections: reflections,
-                      ),
-                    ),
-              child: const Text('Save'),
-            ),
-          ],
-        ),
-      ),
+      builder: (context) =>
+          PatternEditorDialog(rules: project.rules, existing: existing),
     );
     if (result == null) return;
     final patterns = List<PatternDefinition>.from(project.patterns);
@@ -210,10 +108,245 @@ class PatternsStep extends ConsumerWidget {
   }
 }
 
+class PatternEditorDialog extends StatefulWidget {
+  const PatternEditorDialog({required this.rules, this.existing, super.key});
+
+  final RuleSet rules;
+  final PatternDefinition? existing;
+
+  @override
+  State<PatternEditorDialog> createState() => _PatternEditorDialogState();
+}
+
+class _PatternEditorDialogState extends State<PatternEditorDialog> {
+  late final TextEditingController _name;
+  late Set<CellPosition> _cells;
+  late bool _rotations;
+  late bool _reflections;
+
+  @override
+  void initState() {
+    super.initState();
+    _name = TextEditingController(text: widget.existing?.name ?? 'My pattern');
+    _cells = Set<CellPosition>.from(widget.existing?.cells ?? const {});
+    _rotations = widget.existing?.includeRotations ?? false;
+    _reflections = widget.existing?.includeReflections ?? false;
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final previewPattern = PatternDefinition(
+      id: widget.existing?.id ?? 'preview',
+      name: _name.text,
+      cells: _cells,
+      includeRotations: _rotations,
+      includeReflections: _reflections,
+    );
+    final variants = const PatternService().expandVariants(
+      previewPattern,
+      widget.rules,
+    );
+
+    return AlertDialog(
+      title: Text(widget.existing == null ? 'New pattern' : 'Edit pattern'),
+      content: SizedBox(
+        width: 420,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _name,
+                decoration: const InputDecoration(labelText: 'Name'),
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: 16),
+              AspectRatio(
+                aspectRatio: widget.rules.columns / widget.rules.rows,
+                child: GridView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: widget.rules.columns,
+                  ),
+                  itemCount: widget.rules.rows * widget.rules.columns,
+                  itemBuilder: (_, index) {
+                    final position = CellPosition(
+                      index ~/ widget.rules.columns,
+                      index % widget.rules.columns,
+                    );
+                    final selected = _cells.contains(position);
+                    return InkWell(
+                      key: ValueKey('pattern-cell-$index'),
+                      onTap: () => setState(() {
+                        selected
+                            ? _cells.remove(position)
+                            : _cells.add(position);
+                      }),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.surface,
+                          border: Border.all(color: Colors.blueGrey),
+                        ),
+                        child: selected
+                            ? Icon(
+                                Icons.check,
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              )
+                            : null,
+                      ),
+                    );
+                  },
+                ),
+              ),
+              SwitchListTile(
+                key: const ValueKey('include-rotations'),
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Include rotations'),
+                subtitle: Text(
+                  widget.rules.rows == widget.rules.columns
+                      ? 'Includes 90°, 180°, and 270° variants.'
+                      : 'Includes the dimension-preserving 180° variant.',
+                ),
+                value: _rotations,
+                onChanged: (value) => setState(() => _rotations = value),
+              ),
+              SwitchListTile(
+                key: const ValueKey('include-mirrors'),
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Include mirrors'),
+                value: _reflections,
+                onChanged: (value) => setState(() => _reflections = value),
+              ),
+              const SizedBox(height: 8),
+              _PatternVariantsPreview(
+                rules: widget.rules,
+                variants: _cells.isEmpty ? const [] : variants,
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _cells.isEmpty || _name.text.trim().isEmpty
+              ? null
+              : () => Navigator.pop(
+                  context,
+                  PatternDefinition(
+                    id: widget.existing?.id ?? const Uuid().v4(),
+                    name: _name.text.trim(),
+                    cells: _cells,
+                    includeRotations: _rotations,
+                    includeReflections: _reflections,
+                  ),
+                ),
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
+}
+
+class _PatternVariantsPreview extends StatelessWidget {
+  const _PatternVariantsPreview({required this.rules, required this.variants});
+
+  final RuleSet rules;
+  final List<PatternVariant> variants;
+
+  @override
+  Widget build(BuildContext context) {
+    if (variants.isEmpty) {
+      return const Text('Select cells to preview variants.');
+    }
+    final count = variants.length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'Variants ($count unique ${count == 1 ? 'variant' : 'variants'})',
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 108,
+          child: ListView.separated(
+            key: const ValueKey('pattern-variants-list'),
+            scrollDirection: Axis.horizontal,
+            itemCount: variants.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final variant = variants[index];
+              final label = _transformLabel(variant.transform);
+              return Semantics(
+                label: '$label pattern preview',
+                child: SizedBox(
+                  width: 104,
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        width: 64,
+                        height: 64,
+                        child: _PatternGrid(cells: variant.cells, rules: rules),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        label,
+                        maxLines: 2,
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _transformLabel(PatternTransform transform) => switch (transform) {
+    PatternTransform.original => 'Original',
+    PatternTransform.rotate90 => '90°',
+    PatternTransform.rotate180 => '180°',
+    PatternTransform.rotate270 => '270°',
+    PatternTransform.mirror => 'Mirror',
+    PatternTransform.mirrorRotate90 => 'Mirror + 90°',
+    PatternTransform.mirrorRotate180 => 'Mirror + 180°',
+    PatternTransform.mirrorRotate270 => 'Mirror + 270°',
+  };
+}
+
 class _MiniPattern extends StatelessWidget {
   const _MiniPattern({required this.pattern, required this.rules});
 
   final PatternDefinition pattern;
+  final RuleSet rules;
+
+  @override
+  Widget build(BuildContext context) =>
+      _PatternGrid(cells: pattern.cells, rules: rules);
+}
+
+class _PatternGrid extends StatelessWidget {
+  const _PatternGrid({required this.cells, required this.rules});
+
+  final Set<CellPosition> cells;
   final RuleSet rules;
 
   @override
@@ -230,7 +363,7 @@ class _MiniPattern extends StatelessWidget {
       );
       return DecoratedBox(
         decoration: BoxDecoration(
-          color: pattern.cells.contains(position)
+          color: cells.contains(position)
               ? Theme.of(context).colorScheme.primary
               : Theme.of(context).colorScheme.surface,
           border: Border.all(color: Colors.blueGrey.shade200, width: .5),

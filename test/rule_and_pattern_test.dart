@@ -47,6 +47,19 @@ void main() {
           RuleSet.custom(rows: 3, columns: 3),
         );
         expect(variants, hasLength(8));
+
+        final detailed = const PatternService().expandVariants(
+          pattern,
+          RuleSet.custom(rows: 3, columns: 3),
+        );
+        expect(
+          detailed.map((variant) => variant.transform),
+          orderedEquals(PatternTransform.values),
+        );
+        expect(
+          detailed[1].cells,
+          containsAll(const [CellPosition(0, 2), CellPosition(0, 1)]),
+        );
       },
     );
 
@@ -63,6 +76,47 @@ void main() {
       );
       expect(variants, hasLength(2));
       expect(variants.last, contains(const CellPosition(2, 4)));
+    });
+
+    test('rectangular masks expose only dimension-preserving transforms', () {
+      final pattern = PatternDefinition(
+        id: 'corner',
+        name: 'Corner',
+        cells: {const CellPosition(0, 0), const CellPosition(0, 1)},
+        includeRotations: true,
+        includeReflections: true,
+      );
+      final variants = const PatternService().expandVariants(
+        pattern,
+        RuleSet.custom(rows: 3, columns: 5),
+      );
+
+      expect(
+        variants.map((variant) => variant.transform),
+        orderedEquals(const [
+          PatternTransform.original,
+          PatternTransform.rotate180,
+          PatternTransform.mirror,
+          PatternTransform.mirrorRotate180,
+        ]),
+      );
+    });
+
+    test('symmetric duplicates keep the first canonical transform label', () {
+      final pattern = PatternDefinition(
+        id: 'center',
+        name: 'Center',
+        cells: {const CellPosition(1, 1)},
+        includeRotations: true,
+        includeReflections: true,
+      );
+      final variants = const PatternService().expandVariants(
+        pattern,
+        RuleSet.custom(rows: 3, columns: 3),
+      );
+
+      expect(variants, hasLength(1));
+      expect(variants.single.transform, PatternTransform.original);
     });
   });
 }
