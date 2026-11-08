@@ -18,6 +18,7 @@ Read `docs/PROJECT_CONTEXT.md` before making any repository change.
 - Custom grids remain within 3×3–7×7. Column ranges must not overlap and must contain enough values for each card.
 - Regeneration must preserve every locked card/cell, maintain valid column ranges, and produce unique full cards or return a clear conflict.
 - The ordinary virtual card viewer is view-only and optimized for screen readability. Called-number tracking, chronological history, automatic card marking, and resumable sessions belong only to the explicit Play Set mode. Adding daub tracking to the ordinary viewer, caller integration, automatic number drawing, called-number history outside Play Set, or shared/resumable play beyond the existing local per-set session requires an explicit product decision.
+- Puro-number highlighting in Play Set must use the dedicated `BingoPlayColors` theme extension rather than a generic Material color role. Its default is the accessible golden palette; alternate app themes may override the extension without changing picker logic.
 - Exact print dimensions are authoritative. Reduce effective cards per page when necessary; never silently scale exact-size cards.
 - Preserve bundled font licenses and keep PDF rendering offline.
 

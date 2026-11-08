@@ -1,5 +1,45 @@
 import 'package:flutter/material.dart';
 
+@immutable
+class BingoPlayColors extends ThemeExtension<BingoPlayColors> {
+  const BingoPlayColors({
+    required this.puroContainer,
+    required this.onPuroContainer,
+    required this.puroBorder,
+  });
+
+  static const golden = BingoPlayColors(
+    puroContainer: Color(0xFFF4C95D),
+    onPuroContainer: Color(0xFF332400),
+    puroBorder: Color(0xFF9A6700),
+  );
+
+  final Color puroContainer;
+  final Color onPuroContainer;
+  final Color puroBorder;
+
+  @override
+  BingoPlayColors copyWith({
+    Color? puroContainer,
+    Color? onPuroContainer,
+    Color? puroBorder,
+  }) => BingoPlayColors(
+    puroContainer: puroContainer ?? this.puroContainer,
+    onPuroContainer: onPuroContainer ?? this.onPuroContainer,
+    puroBorder: puroBorder ?? this.puroBorder,
+  );
+
+  @override
+  BingoPlayColors lerp(BingoPlayColors? other, double t) {
+    if (other == null) return this;
+    return BingoPlayColors(
+      puroContainer: Color.lerp(puroContainer, other.puroContainer, t)!,
+      onPuroContainer: Color.lerp(onPuroContainer, other.onPuroContainer, t)!,
+      puroBorder: Color.lerp(puroBorder, other.puroBorder, t)!,
+    );
+  }
+}
+
 class BingoAppTheme {
   static const canvas = Color(0xFFF4F1EA);
   static const charcoal = Color(0xFF1F2933);
@@ -13,6 +53,7 @@ class BingoAppTheme {
       brightness: Brightness.light,
       surface: canvas,
     ),
+    extensions: const [BingoPlayColors.golden],
     scaffoldBackgroundColor: canvas,
     cardTheme: const CardThemeData(
       elevation: 0,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/app_theme.dart';
 import '../../app/providers.dart';
 import '../../domain/models.dart';
 import '../../domain/play_session.dart';
@@ -512,6 +513,9 @@ class _NumberCell extends StatelessWidget {
     final puro = !called && puroNumbers.contains(number);
     final latest = number == latestCalledNumber;
     final colors = Theme.of(context).colorScheme;
+    final playColors =
+        Theme.of(context).extension<BingoPlayColors>() ??
+        BingoPlayColors.golden;
     return Semantics(
       label:
           '$columnLabel-$number, ${called
@@ -529,7 +533,7 @@ class _NumberCell extends StatelessWidget {
           color: called
               ? colors.primaryContainer
               : puro
-              ? colors.tertiaryContainer
+              ? playColors.puroContainer
               : colors.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(9),
@@ -539,7 +543,7 @@ class _NumberCell extends StatelessWidget {
                   : called
                   ? colors.primary
                   : puro
-                  ? colors.tertiary
+                  ? playColors.puroBorder
                   : colors.outlineVariant,
               width: latest
                   ? 3
@@ -561,7 +565,7 @@ class _NumberCell extends StatelessWidget {
                       color: called
                           ? colors.onPrimaryContainer
                           : puro
-                          ? colors.onTertiaryContainer
+                          ? playColors.onPuroContainer
                           : colors.onSurface,
                       fontWeight: called || puro
                           ? FontWeight.w900

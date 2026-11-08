@@ -271,10 +271,7 @@ void main() {
     final puroNumberMaterial = tester.widget<Material>(
       find.byKey(ValueKey('call-number-$puroNumber')),
     );
-    expect(
-      puroNumberMaterial.color,
-      BingoAppTheme.light.colorScheme.tertiaryContainer,
-    );
+    expect(puroNumberMaterial.color, BingoPlayColors.golden.puroContainer);
     expect((puroNumberMaterial.shape! as RoundedRectangleBorder).side.width, 2);
     expect(
       find.bySemanticsLabel(
@@ -446,7 +443,7 @@ void main() {
       final material = tester.widget<Material>(
         find.byKey(ValueKey('call-number-$number')),
       );
-      expect(material.color, BingoAppTheme.light.colorScheme.tertiaryContainer);
+      expect(material.color, BingoPlayColors.golden.puroContainer);
       expect((material.shape! as RoundedRectangleBorder).side.width, 2);
     }
     final ordinaryNumber = project.rules.columnRanges
