@@ -8,9 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../data/project_archive_service.dart';
 import 'steps/appearance_step.dart';
-import 'steps/generate_step.dart';
+import 'steps/cards_step.dart';
 import 'steps/patterns_step.dart';
-import 'steps/review_step.dart';
 import 'steps/rules_step.dart';
 
 class ProjectEditorScreen extends ConsumerStatefulWidget {
@@ -24,13 +23,12 @@ class ProjectEditorScreen extends ConsumerStatefulWidget {
 class _ProjectEditorScreenState extends ConsumerState<ProjectEditorScreen> {
   var _index = 0;
 
-  static const _labels = ['Rules', 'Patterns', 'Style', 'Generate', 'Review'];
+  static const _labels = ['Rules', 'Patterns', 'Style', 'Cards'];
   static const _icons = [
     Icons.tune,
     Icons.auto_awesome_mosaic_outlined,
     Icons.palette_outlined,
-    Icons.casino_outlined,
-    Icons.print_outlined,
+    Icons.grid_view_outlined,
   ];
 
   @override
@@ -43,8 +41,7 @@ class _ProjectEditorScreenState extends ConsumerState<ProjectEditorScreen> {
       const RulesStep(),
       const PatternsStep(),
       const AppearanceStep(),
-      GenerateStep(onContinue: () => setState(() => _index = 4)),
-      const ReviewStep(),
+      const CardsStep(),
     ];
     return Scaffold(
       appBar: AppBar(
