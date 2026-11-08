@@ -10,6 +10,7 @@ Read `docs/PROJECT_CONTEXT.md` before changing product behavior or architecture.
 - Standard 75-ball cards use B: 1–15, I: 16–30, N: 31–45, G: 46–60, O: 61–75, with a free center.
 - Custom grids remain within 3×3–7×7. Column ranges must not overlap and must contain enough values for each card.
 - Regeneration must preserve every locked card/cell, maintain valid column ranges, and produce unique full cards or return a clear conflict.
+- The virtual card viewer is view-only and optimized for screen readability. Adding daub tracking, caller integration, called-number history, or resumable play sessions requires an explicit product decision.
 - Exact print dimensions are authoritative. Reduce effective cards per page when necessary; never silently scale exact-size cards.
 - Preserve bundled font licenses and keep PDF rendering offline.
 
@@ -18,9 +19,10 @@ Read `docs/PROJECT_CONTEXT.md` before changing product behavior or architecture.
 - `lib/domain`: Flutter-independent models, contracts, mask transforms, and coverage optimization.
 - `lib/data`: Drift persistence and checksummed `.bingopro` archives.
 - `lib/app`: dependency providers and editor state orchestration.
-- `lib/features`: widgets and the Rules → Patterns → Style → Generate → Review workflow.
+- `lib/features`: widgets and the Rules → Patterns → Style → Cards workflow. Cards owns generation, virtual viewing, regeneration locks, and print entry points.
 - `lib/printing`: vector PDF construction and calibration output.
 - UI code must call domain/data abstractions rather than duplicate generation, validation, persistence, or PDF rules.
+- Screen-optimized virtual cards preserve authoritative values and identities, while the PDF preview remains authoritative for print appearance and exact dimensions.
 
 When the Drift schema changes, increment `AppDatabase.schemaVersion`, add an explicit migration, and regenerate `lib/data/app_database.g.dart`. When the `.bingopro` payload changes incompatibly, increment and migrate the archive/project schema instead of silently accepting old data.
 

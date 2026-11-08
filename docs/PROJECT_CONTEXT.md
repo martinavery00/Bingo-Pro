@@ -16,13 +16,16 @@ Working app identity:
 
 ## Current user experience
 
-The app opens to a local project list. Creating or opening a project enters a five-step workflow:
+The app opens to a local project list. Creating or opening a project enters a four-destination workflow:
 
 1. **Rules** — choose 1–18 cards, standard 75-ball rules, or a custom 3×3–7×7 grid with editable labels/ranges and free cells.
 2. **Patterns** — use the default row/column/diagonal masks or draw named masks. Rotations and reflections are explicit; 90°/270° rotation is available only for square grids.
 3. **Style** — select bundled fonts and presets or edit colors, inner/outer lines, free-space label, paper, orientation, margins, gutters, page grid, cut marks, and exact card dimensions.
-4. **Generate** — generate a new secure seed or reproduce the saved seed, then show a coverage score and overlap summaries.
-5. **Review** — inspect every card, lock full cards or individual numbered cells, re-optimize unlocked content, preview the vector PDF, share/save it, print it, or print a 50 mm calibration page.
+4. **Cards** — validate and generate diversified sets, inspect one optimizer group of up to six cards at a time, open a full-screen card viewer, explicitly edit regeneration locks, review collapsed coverage details, reproduce the saved seed, generate a new batch, or open the print preview.
+
+Before generation, Cards presents a compact rules/pattern/card-count summary and the validation or generation state. After generation, it prioritizes a responsive card overview with a set selector when the project contains more than six cards. Opening a card uses the full screen and supports swiping only within its optimizer set. The virtual viewer is view-only: normal card and cell taps never record game state.
+
+Virtual cards preserve the generated values, column labels, free cells, set membership, and stable card identifiers, but use an accessibility-oriented screen treatment with larger type and strong contrast instead of reproducing the selected print theme. The vector PDF preview remains the print-faithful representation and the authority for exact layout and dimensions. Full-card and numbered-cell locks are available only through an explicit Edit locks mode so browsing cannot accidentally alter regeneration state.
 
 Projects autosave locally. A project can be exported/imported as a checksummed, versioned `.bingopro` JSON archive. Imported projects receive a new ID so they do not overwrite local projects.
 
@@ -102,8 +105,8 @@ Bundled fonts are Atkinson Hyperlegible, Noto Sans, and Roboto Slab. Do not repl
 The current baseline is:
 
 - `flutter analyze`: clean.
-- 14 automated tests: passing.
-- Tests cover rules, transforms, 18-card validity/balance/uniqueness, reproducibility, score monotonicity, custom grid sizes, lock preservation, archive tampering, bundled PDF fonts, PDF/calibration generation, performance, and the home-screen empty state.
+- 25 automated tests: passing.
+- Tests cover rules, transforms, 18-card validity/balance/uniqueness, reproducibility, score monotonicity, custom grid sizes, lock preservation, archive tampering, bundled PDF fonts, PDF/calibration generation, performance, the home-screen empty state, and the four-destination Cards/viewer workflow.
 - Default 18-card generation with ten line patterns completes within the three-second test target on the development host.
 - Android debug APK builds successfully at `build/app/outputs/flutter-apk/app-debug.apk`.
 
@@ -123,7 +126,7 @@ For generator changes, prefer fixed seeds and invariant assertions over snapshot
 ## Explicit non-goals for v1
 
 - Accounts, cloud synchronization, collaboration, analytics, ads, or remote services
-- Bingo calling/draw management or multiplayer session administration
+- Bingo calling/draw management, digital daub tracking, called-number history, resumable game sessions, or multiplayer session administration
 - Word/phrase/image bingo cards
 - Claims of guaranteed or precisely quantified winning advantage
 - Large organizer runs beyond 18 cards
