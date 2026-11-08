@@ -304,6 +304,9 @@ class _NumbersView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final latest = session.calledNumbers.lastOrNull;
+    final puroNumbers = evaluation.oneAwayPatterns
+        .map((result) => result.missingNumbers.single.value)
+        .toSet();
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
       child: Column(
@@ -318,9 +321,16 @@ class _NumbersView extends StatelessWidget {
                 ),
               ),
               if (latest != null)
-                Chip(
+                ActionChip(
+                  key: const ValueKey('called-number-history-action'),
+                  tooltip: 'View called-number history',
                   avatar: const Icon(Icons.history, size: 17),
                   label: Text('Last ${_numberLabel(rules, latest)}'),
+                  onPressed: () => _showCalledNumberHistory(
+                    context,
+                    rules: rules,
+                    calledNumbers: session.calledNumbers,
+                  ),
                 ),
             ],
           ),
@@ -329,12 +339,11 @@ class _NumbersView extends StatelessWidget {
             _CompletedBanner(results: evaluation.completedPatterns),
           ],
           const SizedBox(height: 6),
-          _AlmostComplete(results: evaluation.oneAwayPatterns),
-          const SizedBox(height: 8),
           Expanded(
             child: _FullNumberBoard(
               rules: rules,
               calledNumbers: session.calledNumbers.toSet(),
+              puroNumbers: puroNumbers,
               latestCalledNumber: latest,
               onNumberTap: onNumberTap,
             ),
@@ -380,171 +389,18 @@ class _CompletedBanner extends StatelessWidget {
   );
 }
 
-class _AlmostComplete extends StatelessWidget {
-  const _AlmostComplete({required this.results});
-
-  final List<PlayPatternResult> results;
-
-  @override
-  Widget build(BuildContext context) {
-    final groups = _nearGroups(results);
-    final visible = groups.take(3).toList();
-    final hasHiddenDetails =
-        groups.length > visible.length ||
-        groups.any((group) => group.results.length > 2);
-    return Card(
-      key: const ValueKey('almost-complete-section'),
-      margin: EdgeInsets.zero,
-      color: Theme.of(context).colorScheme.secondaryContainer,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.notifications_active_outlined, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Almost complete',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                ),
-                if (hasHiddenDetails)
-                  TextButton(
-                    key: const ValueKey('view-all-near-patterns'),
-                    onPressed: () => _showNearGroups(context, groups),
-                    child: const Text('View all'),
-                  ),
-              ],
-            ),
-            if (groups.isEmpty)
-              const Padding(
-                padding: EdgeInsets.only(top: 4, bottom: 4),
-                child: Text('No patterns are one number away yet.'),
-              )
-            else
-              for (final group in visible) _NearGroupRow(group: group),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showNearGroups(BuildContext context, List<_NearGroup> groups) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) => SafeArea(
-        child: SizedBox(
-          height: MediaQuery.sizeOf(context).height * .72,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-            children: [
-              Text(
-                'Almost complete',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              for (final group in groups)
-                _NearGroupRow(group: group, showAll: true),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NearGroupRow extends StatelessWidget {
-  const _NearGroupRow({required this.group, this.showAll = false});
-
-  final _NearGroup group;
-  final bool showAll;
-
-  @override
-  Widget build(BuildContext context) {
-    final shown = showAll ? group.results : group.results.take(2);
-    final hidden = group.results.length - shown.length;
-    return Padding(
-      padding: const EdgeInsets.only(top: 5, bottom: 5),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            constraints: const BoxConstraints(minWidth: 64),
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Text(
-              'Needs ${group.label}',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.w800),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final result in shown)
-                  Text('${result.cardDisplayId} · ${result.variantLabel}'),
-                if (hidden > 0) Text('+$hidden more'),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NearGroup {
-  const _NearGroup({
-    required this.label,
-    required this.value,
-    required this.results,
-  });
-
-  final String label;
-  final int value;
-  final List<PlayPatternResult> results;
-}
-
-List<_NearGroup> _nearGroups(List<PlayPatternResult> results) {
-  final grouped = <String, List<PlayPatternResult>>{};
-  final values = <String, int>{};
-  for (final result in results) {
-    final missing = result.missingNumbers.single;
-    grouped.putIfAbsent(missing.displayLabel, () => []).add(result);
-    values[missing.displayLabel] = missing.value;
-  }
-  final groups = [
-    for (final entry in grouped.entries)
-      _NearGroup(
-        label: entry.key,
-        value: values[entry.key]!,
-        results: entry.value,
-      ),
-  ];
-  groups.sort((a, b) => a.value.compareTo(b.value));
-  return groups;
-}
-
 class _FullNumberBoard extends StatelessWidget {
   const _FullNumberBoard({
     required this.rules,
     required this.calledNumbers,
+    required this.puroNumbers,
     required this.latestCalledNumber,
     required this.onNumberTap,
   });
 
   final RuleSet rules;
   final Set<int> calledNumbers;
+  final Set<int> puroNumbers;
   final int? latestCalledNumber;
   final ValueChanged<int> onNumberTap;
 
@@ -610,6 +466,7 @@ class _FullNumberBoard extends StatelessWidget {
                                 columnLabel: rules.columnLabels[column],
                                 offset: row,
                                 calledNumbers: calledNumbers,
+                                puroNumbers: puroNumbers,
                                 latestCalledNumber: latestCalledNumber,
                                 onNumberTap: onNumberTap,
                               ),
@@ -634,6 +491,7 @@ class _NumberCell extends StatelessWidget {
     required this.columnLabel,
     required this.offset,
     required this.calledNumbers,
+    required this.puroNumbers,
     required this.latestCalledNumber,
     required this.onNumberTap,
   });
@@ -642,6 +500,7 @@ class _NumberCell extends StatelessWidget {
   final String columnLabel;
   final int offset;
   final Set<int> calledNumbers;
+  final Set<int> puroNumbers;
   final int? latestCalledNumber;
   final ValueChanged<int> onNumberTap;
 
@@ -650,10 +509,16 @@ class _NumberCell extends StatelessWidget {
     final number = range.start + offset;
     if (number > range.end) return const SizedBox.shrink();
     final called = calledNumbers.contains(number);
+    final puro = !called && puroNumbers.contains(number);
     final latest = number == latestCalledNumber;
     final colors = Theme.of(context).colorScheme;
     return Semantics(
-      label: '$columnLabel-$number, ${called ? 'called' : 'not called'}',
+      label:
+          '$columnLabel-$number, ${called
+              ? 'called'
+              : puro
+              ? 'not called, puro; would complete a pattern'
+              : 'not called'}',
       button: true,
       selected: called,
       excludeSemantics: true,
@@ -661,7 +526,11 @@ class _NumberCell extends StatelessWidget {
         padding: const EdgeInsets.all(3),
         child: Material(
           key: ValueKey('call-number-$number'),
-          color: called ? colors.primaryContainer : colors.surface,
+          color: called
+              ? colors.primaryContainer
+              : puro
+              ? colors.tertiaryContainer
+              : colors.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(9),
             side: BorderSide(
@@ -669,8 +538,14 @@ class _NumberCell extends StatelessWidget {
                   ? colors.primary
                   : called
                   ? colors.primary
+                  : puro
+                  ? colors.tertiary
                   : colors.outlineVariant,
-              width: latest ? 3 : 1,
+              width: latest
+                  ? 3
+                  : puro
+                  ? 2
+                  : 1,
             ),
           ),
           child: InkWell(
@@ -685,8 +560,12 @@ class _NumberCell extends StatelessWidget {
                     style: TextStyle(
                       color: called
                           ? colors.onPrimaryContainer
+                          : puro
+                          ? colors.onTertiaryContainer
                           : colors.onSurface,
-                      fontWeight: called ? FontWeight.w900 : FontWeight.w700,
+                      fontWeight: called || puro
+                          ? FontWeight.w900
+                          : FontWeight.w700,
                     ),
                   ),
                 ),
@@ -962,6 +841,64 @@ void _showPatternResults(
                         'Needs ${result.missingNumbers.single.displayLabel}',
                       ),
               ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+void _showCalledNumberHistory(
+  BuildContext context, {
+  required RuleSet rules,
+  required List<int> calledNumbers,
+}) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (context) => SafeArea(
+      child: SizedBox(
+        height: MediaQuery.sizeOf(context).height * .72,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Called numbers',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${calledNumbers.length} called · oldest to newest',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: ListView.separated(
+                key: const ValueKey('called-number-history-list'),
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 24),
+                itemCount: calledNumbers.length,
+                separatorBuilder: (_, _) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final number = calledNumbers[index];
+                  final latest = index == calledNumbers.length - 1;
+                  return ListTile(
+                    key: ValueKey('called-number-history-$index'),
+                    leading: CircleAvatar(child: Text('${index + 1}')),
+                    title: Text(_numberLabel(rules, number)),
+                    trailing: latest ? const Chip(label: Text('Latest')) : null,
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),

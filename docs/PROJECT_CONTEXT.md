@@ -1,5 +1,9 @@
 # Bingo Pro project context
 
+## Documentation policy
+
+Every repository change must keep this file and `AGENTS.md` current before handoff. This file records the resulting product state, implementation facts, constraints, verification baseline, and known gaps; `AGENTS.md` records the durable implementation, safety, platform, and verification guidance future agents must follow. Updates belong in the relevant sections rather than in chronological change logs, so both documents remain descriptions of the current repository.
+
 ## Product brief
 
 Bingo Pro is a private, offline mobile tool for creating and printing numeric bingo cards. Its primary user plays six cards in a game and may prepare up to three independent six-card sets. The app helps diversify each active set, customize its appearance and physical print layout, and produce a vector PDF suitable for saving, sharing, or native printing.
@@ -25,7 +29,7 @@ The app opens to a local project list. Creating or opening a project enters a fo
 
 Before generation, Cards presents a compact rules/pattern/card-count summary and the validation or generation state. After generation, it prioritizes a responsive card overview with a set selector when the project contains more than six cards. Opening a card uses the full screen and supports swiping only within its optimizer set. The ordinary virtual viewer remains view-only: normal card and cell taps never record game state.
 
-Play Set is a separate, explicit gameplay mode for one optimizer set of up to six cards. It opens on a Numbers tab that shows every configured column together; tapping the board records or removes called numbers and automatically marks every matching card. An always-visible Almost complete section groups one-away patterns by the exact missing number and names each affected card and pattern variant. A separate Cards tab shows all cards in a compact responsive overview, with a readable swipeable detail view on tap. Completed patterns are celebrated without ending the game, and one resumable local session is autosaved per set. Free cells are visually neutral and excluded from pattern requirements; a pattern variant containing only free cells is ignored. Called-number order is retained, but marks and wins are always derived from the current calls.
+Play Set is a separate, explicit gameplay mode for one optimizer set of up to six cards. It opens on a Numbers tab that shows every configured column together; tapping the board records or removes called numbers and automatically marks every matching card. Uncalled numbers that would complete at least one one-away pattern are highlighted directly on the number board as puro numbers, keeping the picker compact without a separate hint panel. The last-called chip opens a read-only history of called numbers in chronological order. A separate Cards tab shows all cards in a compact responsive overview, with a readable swipeable detail view on tap. Completed patterns are celebrated without ending the game, and one resumable local session is autosaved per set. Free cells are visually neutral and excluded from pattern requirements; a pattern variant containing only free cells is ignored. Called-number order is retained, but marks and wins are always derived from the current calls.
 
 Virtual cards preserve the generated values, column labels, free cells, set membership, and stable card identifiers, but use an accessibility-oriented screen treatment with larger type and strong contrast instead of reproducing the selected print theme. The vector PDF preview remains the print-faithful representation and the authority for exact layout and dimensions. Full-card and numbered-cell locks are available only through an explicit Edit locks mode so browsing cannot accidentally alter regeneration state.
 
@@ -110,7 +114,7 @@ Bundled fonts are Atkinson Hyperlegible, Noto Sans, and Roboto Slab. Do not repl
 The current baseline is:
 
 - `flutter analyze`: clean.
-- 36 automated tests: passing.
+- 37 automated tests: passing.
 - Tests cover rules, transforms, 18-card validity/balance/uniqueness, reproducibility, score monotonicity, custom grid sizes, lock preservation, play evaluation/session persistence, archive tampering, bundled PDF fonts, PDF/calibration generation, performance, the home-screen empty state, and the four-destination Cards/viewer/play workflow.
 - Default 18-card generation with ten line patterns completes within the three-second test target on the development host.
 - Android debug APK builds successfully at `build/app/outputs/flutter-apk/app-debug.apk`.

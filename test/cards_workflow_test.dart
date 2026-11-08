@@ -208,139 +208,193 @@ void main() {
     }
   });
 
-  testWidgets(
-    'Play set records calls, reports near wins, and continues after Bingo',
-    (tester) async {
-      tester.view.physicalSize = const Size(600, 1000);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets('Play set records calls, reports near wins, and continues after Bingo', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(600, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
 
-      final project = _generatedProject(cardCount: 2);
-      final playRepository = _MemoryPlaySessionRepository();
-      await _pumpCards(tester, project, playRepository: playRepository);
+    final project = _generatedProject(cardCount: 2);
+    final playRepository = _MemoryPlaySessionRepository();
+    await _pumpCards(tester, project, playRepository: playRepository);
 
-      await tester.tap(find.byKey(const ValueKey('play-set')));
-      await tester.pumpAndSettle();
-      expect(find.text('Play · Set 1'), findsOneWidget);
-      expect(playRepository.sessions, hasLength(1));
-      expect(find.byKey(const ValueKey('full-number-board')), findsOneWidget);
-      expect(
-        find.byKey(const ValueKey('almost-complete-section')),
-        findsOneWidget,
-      );
-      expect(find.text('No patterns are one number away yet.'), findsOneWidget);
-      expect(find.byKey(const ValueKey('keypad-input')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('play-set')));
+    await tester.pumpAndSettle();
+    expect(find.text('Play · Set 1'), findsOneWidget);
+    expect(playRepository.sessions, hasLength(1));
+    expect(find.byKey(const ValueKey('full-number-board')), findsOneWidget);
+    expect(find.byKey(const ValueKey('almost-complete-section')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('called-number-history-action')),
+      findsNothing,
+    );
+    expect(find.byKey(const ValueKey('keypad-input')), findsNothing);
 
-      final topRow =
-          project.cards.first.cells
-              .where((cell) => cell.position.row == 0 && !cell.isFree)
-              .toList()
-            ..sort((a, b) => a.position.column.compareTo(b.position.column));
-      for (final cell in topRow) {
-        expect(
-          find.byKey(ValueKey('call-number-${cell.value}')),
-          findsOneWidget,
-        );
-      }
-      for (final cell in topRow.take(topRow.length - 1)) {
-        await tester.tap(find.byKey(ValueKey('call-number-${cell.value}')));
-        await tester.pump();
-      }
-      final latestNumberMaterial = tester.widget<Material>(
-        find.byKey(ValueKey('call-number-${topRow[topRow.length - 2].value}')),
-      );
+    final topRow =
+        project.cards.first.cells
+            .where((cell) => cell.position.row == 0 && !cell.isFree)
+            .toList()
+          ..sort((a, b) => a.position.column.compareTo(b.position.column));
+    for (final cell in topRow) {
+      expect(find.byKey(ValueKey('call-number-${cell.value}')), findsOneWidget);
+    }
+    final firstColumnStart = project.rules.columnRanges.first.start;
+    final initialRowStride =
+        tester
+            .getTopLeft(
+              find.byKey(ValueKey('call-number-${firstColumnStart + 1}')),
+            )
+            .dy -
+        tester
+            .getTopLeft(find.byKey(ValueKey('call-number-$firstColumnStart')))
+            .dy;
+    expect(initialRowStride, 50);
+
+    for (final cell in topRow.take(topRow.length - 1)) {
+      await tester.tap(find.byKey(ValueKey('call-number-${cell.value}')));
+      await tester.pump();
+    }
+    expect(
+      find.byKey(const ValueKey('called-number-history-action')),
+      findsOneWidget,
+    );
+    final latestNumberMaterial = tester.widget<Material>(
+      find.byKey(ValueKey('call-number-${topRow[topRow.length - 2].value}')),
+    );
+    expect(
+      (latestNumberMaterial.shape! as RoundedRectangleBorder).side.width,
+      3,
+    );
+    final puroNumber = topRow.last.value!;
+    final puroNumberMaterial = tester.widget<Material>(
+      find.byKey(ValueKey('call-number-$puroNumber')),
+    );
+    expect(
+      puroNumberMaterial.color,
+      BingoAppTheme.light.colorScheme.tertiaryContainer,
+    );
+    expect((puroNumberMaterial.shape! as RoundedRectangleBorder).side.width, 2);
+    expect(
+      find.bySemanticsLabel(
+        '${project.rules.columnLabels[topRow.last.position.column]}-$puroNumber, not called, puro; would complete a pattern',
+      ),
+      findsOneWidget,
+    );
+    final updatedRowStride =
+        tester
+            .getTopLeft(
+              find.byKey(ValueKey('call-number-${firstColumnStart + 1}')),
+            )
+            .dy -
+        tester
+            .getTopLeft(find.byKey(ValueKey('call-number-$firstColumnStart')))
+            .dy;
+    expect(updatedRowStride, initialRowStride);
+
+    await tester.tap(
+      find.byKey(const ValueKey('called-number-history-action')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Called numbers'), findsOneWidget);
+    expect(find.text('4 called · oldest to newest'), findsOneWidget);
+    for (var index = 0; index < topRow.length - 1; index++) {
       expect(
-        (latestNumberMaterial.shape! as RoundedRectangleBorder).side.width,
-        3,
-      );
-      expect(
-        find.text(
-          'Needs ${project.rules.columnLabels[topRow.last.position.column]}-${topRow.last.value}',
+        find.descendant(
+          of: find.byKey(ValueKey('called-number-history-$index')),
+          matching: find.text(
+            '${project.rules.columnLabels[topRow[index].position.column]}-${topRow[index].value}',
+          ),
         ),
         findsOneWidget,
       );
+    }
+    expect(find.text('Latest'), findsOneWidget);
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('play-cards-tab')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('play-cards-overview')), findsOneWidget);
+    for (final card in project.cards) {
       expect(
-        find.text('${project.cards.first.displayId} · Top row'),
+        find.byKey(ValueKey('play-overview-card-${card.id}')),
         findsOneWidget,
       );
+    }
+    expect(
+      find.text(
+        'Needs ${project.rules.columnLabels[topRow.last.position.column]}-${topRow.last.value}',
+      ),
+      findsWidgets,
+    );
+    await tester.tap(
+      find.byKey(ValueKey('play-overview-card-${project.cards.first.id}')),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('play-card-detail-pages')),
+      findsOneWidget,
+    );
+    expect(find.text('Card 1 of 2'), findsOneWidget);
+    await tester.tap(find.byTooltip('Close card detail'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('play-numbers-tab')));
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const ValueKey('play-cards-tab')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('play-cards-overview')), findsOneWidget);
-      for (final card in project.cards) {
-        expect(
-          find.byKey(ValueKey('play-overview-card-${card.id}')),
-          findsOneWidget,
-        );
-      }
-      expect(
-        find.text(
-          'Needs ${project.rules.columnLabels[topRow.last.position.column]}-${topRow.last.value}',
-        ),
-        findsWidgets,
-      );
-      await tester.tap(
-        find.byKey(ValueKey('play-overview-card-${project.cards.first.id}')),
-      );
-      await tester.pumpAndSettle();
-      expect(
-        find.byKey(const ValueKey('play-card-detail-pages')),
-        findsOneWidget,
-      );
-      expect(find.text('Card 1 of 2'), findsOneWidget);
-      await tester.tap(find.byTooltip('Close card detail'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('play-numbers-tab')));
-      await tester.pumpAndSettle();
+    await tester.tap(find.byKey(ValueKey('call-number-${topRow.last.value}')));
+    await tester.pumpAndSettle();
+    expect(find.text('Bingo!'), findsOneWidget);
+    await tester.tap(find.text('Continue playing'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('completed pattern'), findsOneWidget);
+    final completedNumberMaterial = tester.widget<Material>(
+      find.byKey(ValueKey('call-number-$puroNumber')),
+    );
+    expect(
+      completedNumberMaterial.color,
+      BingoAppTheme.light.colorScheme.primaryContainer,
+    );
+    expect(
+      find.bySemanticsLabel(
+        '${project.rules.columnLabels[topRow.last.position.column]}-$puroNumber, called',
+      ),
+      findsOneWidget,
+    );
 
-      await tester.tap(
-        find.byKey(ValueKey('call-number-${topRow.last.value}')),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Bingo!'), findsOneWidget);
-      await tester.tap(find.text('Continue playing'));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('completed pattern'), findsOneWidget);
+    await tester.tap(find.byKey(ValueKey('call-number-${topRow.last.value}')));
+    await tester.pump();
+    expect(find.textContaining('removed from called numbers'), findsOneWidget);
+    expect(
+      playRepository.sessions.single.calledNumbers,
+      isNot(contains(topRow.last.value)),
+    );
+    tester.widget<SnackBarAction>(find.byType(SnackBarAction)).onPressed();
+    await tester.pump();
+    expect(
+      playRepository.sessions.single.calledNumbers,
+      topRow.map((cell) => cell.value).toList(),
+    );
+    await tester.tap(find.byTooltip('Game actions'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Start over'));
+    await tester.pumpAndSettle();
+    expect(find.text('Start over?'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Start over'));
+    await tester.pumpAndSettle();
+    expect(playRepository.sessions.single.calledNumbers, isEmpty);
 
-      await tester.tap(
-        find.byKey(ValueKey('call-number-${topRow.last.value}')),
-      );
-      await tester.pump();
-      expect(
-        find.textContaining('removed from called numbers'),
-        findsOneWidget,
-      );
-      expect(
-        playRepository.sessions.single.calledNumbers,
-        isNot(contains(topRow.last.value)),
-      );
-      tester.widget<SnackBarAction>(find.byType(SnackBarAction)).onPressed();
-      await tester.pump();
-      expect(
-        playRepository.sessions.single.calledNumbers,
-        contains(topRow.last.value),
-      );
-      await tester.tap(find.byTooltip('Game actions'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Start over'));
-      await tester.pumpAndSettle();
-      expect(find.text('Start over?'), findsOneWidget);
-      await tester.tap(find.widgetWithText(FilledButton, 'Start over'));
-      await tester.pumpAndSettle();
-      expect(playRepository.sessions.single.calledNumbers, isEmpty);
-
-      await tester.tap(find.byTooltip('Game actions'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('End game'));
-      await tester.pumpAndSettle();
-      expect(find.text('End game?'), findsOneWidget);
-      await tester.tap(find.widgetWithText(FilledButton, 'End game'));
-      await tester.pumpAndSettle();
-      expect(playRepository.sessions, isEmpty);
-      expect(find.byKey(const ValueKey('cards-workspace')), findsOneWidget);
-    },
-  );
+    await tester.tap(find.byTooltip('Game actions'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('End game'));
+    await tester.pumpAndSettle();
+    expect(find.text('End game?'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'End game'));
+    await tester.pumpAndSettle();
+    expect(playRepository.sessions, isEmpty);
+    expect(find.byKey(const ValueKey('cards-workspace')), findsOneWidget);
+  });
 
   testWidgets('Cards labels a matching saved set as resumable', (tester) async {
     final project = _generatedProject(cardCount: 2);
@@ -359,9 +413,7 @@ void main() {
     expect(find.text('Resume game'), findsOneWidget);
   });
 
-  testWidgets('Almost complete shows View all for more than three needs', (
-    tester,
-  ) async {
+  testWidgets('puro highlights every distinct one-away number', (tester) async {
     final project = _manyNearPatternsProject();
     final playRepository = _MemoryPlaySessionRepository();
     final anchor = project.cards.single.cellAt(0, 0).value!;
@@ -379,15 +431,85 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('play-set')));
     await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('almost-complete-section')), findsNothing);
+    final evaluation = const PlayEvaluator().evaluate(
+      rules: project.rules,
+      patterns: project.patterns,
+      cards: project.cards,
+      calledNumbers: [anchor],
+    );
+    final puroNumbers = evaluation.oneAwayPatterns
+        .map((result) => result.missingNumbers.single.value)
+        .toSet();
+    expect(puroNumbers, hasLength(4));
+    for (final number in puroNumbers) {
+      final material = tester.widget<Material>(
+        find.byKey(ValueKey('call-number-$number')),
+      );
+      expect(material.color, BingoAppTheme.light.colorScheme.tertiaryContainer);
+      expect((material.shape! as RoundedRectangleBorder).side.width, 2);
+    }
+    final ordinaryNumber = project.rules.columnRanges
+        .expand(
+          (range) => [
+            for (var value = range.start; value <= range.end; value++) value,
+          ],
+        )
+        .firstWhere(
+          (number) => number != anchor && !puroNumbers.contains(number),
+        );
+    final ordinaryMaterial = tester.widget<Material>(
+      find.byKey(ValueKey('call-number-$ordinaryNumber')),
+    );
+    expect(ordinaryMaterial.color, BingoAppTheme.light.colorScheme.surface);
+    expect((ordinaryMaterial.shape! as RoundedRectangleBorder).side.width, 1);
+  });
+
+  testWidgets('called-number history follows removal and re-call order', (
+    tester,
+  ) async {
+    final project = _sevenColumnProject();
+    final playRepository = _MemoryPlaySessionRepository();
+    await playRepository.save(
+      PlaySession(
+        projectId: project.id,
+        setIndex: 1,
+        sourceSignature: playSourceSignature(project, 1),
+        calledNumbers: const [1, 10, 60],
+        startedAt: DateTime(2026, 11, 8),
+        updatedAt: DateTime(2026, 11, 8),
+      ),
+    );
+    await _pumpCards(tester, project, playRepository: playRepository);
+
+    await tester.tap(find.byKey(const ValueKey('play-set')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('call-number-10')));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('call-number-10')));
+    await tester.pump();
+
+    expect(playRepository.sessions.single.calledNumbers, [1, 60, 10]);
+    await tester.tap(
+      find.byKey(const ValueKey('called-number-history-action')),
+    );
+    await tester.pumpAndSettle();
+    for (final entry in const [(0, 'A-1'), (1, 'G-60'), (2, 'B-10')]) {
+      expect(
+        find.descendant(
+          of: find.byKey(ValueKey('called-number-history-${entry.$1}')),
+          matching: find.text(entry.$2),
+        ),
+        findsOneWidget,
+      );
+    }
     expect(
-      find.byKey(const ValueKey('view-all-near-patterns')),
+      find.descendant(
+        of: find.byKey(const ValueKey('called-number-history-2')),
+        matching: find.text('Latest'),
+      ),
       findsOneWidget,
     );
-    await tester.tap(find.byKey(const ValueKey('view-all-near-patterns')));
-    await tester.pumpAndSettle();
-    for (var index = 1; index <= 4; index++) {
-      expect(find.textContaining('Pattern $index'), findsWidgets);
-    }
   });
 
   testWidgets('full number board supports seven unequal custom columns', (

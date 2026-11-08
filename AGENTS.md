@@ -1,6 +1,13 @@
 # Bingo Pro agent guidance
 
-Read `docs/PROJECT_CONTEXT.md` before changing product behavior or architecture. Keep that document current when a change alters scope, invariants, platform constraints, schemas, or known gaps.
+Read `docs/PROJECT_CONTEXT.md` before making any repository change.
+
+## Documentation discipline
+
+- Every change must update both `docs/PROJECT_CONTEXT.md` and `AGENTS.md` before handoff. This includes code, UI, behavior, architecture, schema, dependency, build/tooling, test, and documentation changes.
+- Update `docs/PROJECT_CONTEXT.md` with the resulting product state, implementation facts, constraints, verification baseline, and known gaps affected by the change.
+- Update `AGENTS.md` with any durable implementation, safety, platform, or verification guidance future agents need. Review and reconcile existing guidance even when the change does not introduce a new invariant.
+- Integrate documentation into the relevant sections instead of adding a chronological change log. Both files must describe the current repository, not the history of how it arrived there.
 
 ## Product invariants
 
@@ -10,7 +17,7 @@ Read `docs/PROJECT_CONTEXT.md` before changing product behavior or architecture.
 - Standard 75-ball cards use B: 1–15, I: 16–30, N: 31–45, G: 46–60, O: 61–75, with a free center.
 - Custom grids remain within 3×3–7×7. Column ranges must not overlap and must contain enough values for each card.
 - Regeneration must preserve every locked card/cell, maintain valid column ranges, and produce unique full cards or return a clear conflict.
-- The virtual card viewer is view-only and optimized for screen readability. Adding daub tracking, caller integration, called-number history, or resumable play sessions requires an explicit product decision.
+- The ordinary virtual card viewer is view-only and optimized for screen readability. Called-number tracking, chronological history, automatic card marking, and resumable sessions belong only to the explicit Play Set mode. Adding daub tracking to the ordinary viewer, caller integration, automatic number drawing, called-number history outside Play Set, or shared/resumable play beyond the existing local per-set session requires an explicit product decision.
 - Exact print dimensions are authoritative. Reduce effective cards per page when necessary; never silently scale exact-size cards.
 - Preserve bundled font licenses and keep PDF rendering offline.
 
