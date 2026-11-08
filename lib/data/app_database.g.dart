@@ -310,31 +310,465 @@ class ProjectsCompanion extends UpdateCompanion<Project> {
   }
 }
 
+class $PlaySessionsTable extends PlaySessions
+    with TableInfo<$PlaySessionsTable, PlaySession> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlaySessionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _projectIdMeta = const VerificationMeta(
+    'projectId',
+  );
+  @override
+  late final GeneratedColumn<String> projectId = GeneratedColumn<String>(
+    'project_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _setIndexMeta = const VerificationMeta(
+    'setIndex',
+  );
+  @override
+  late final GeneratedColumn<int> setIndex = GeneratedColumn<int>(
+    'set_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceSignatureMeta = const VerificationMeta(
+    'sourceSignature',
+  );
+  @override
+  late final GeneratedColumn<String> sourceSignature = GeneratedColumn<String>(
+    'source_signature',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _calledNumbersMeta = const VerificationMeta(
+    'calledNumbers',
+  );
+  @override
+  late final GeneratedColumn<String> calledNumbers = GeneratedColumn<String>(
+    'called_numbers',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startedAtMeta = const VerificationMeta(
+    'startedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startedAt = GeneratedColumn<DateTime>(
+    'started_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    projectId,
+    setIndex,
+    sourceSignature,
+    calledNumbers,
+    startedAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'play_sessions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PlaySession> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('project_id')) {
+      context.handle(
+        _projectIdMeta,
+        projectId.isAcceptableOrUnknown(data['project_id']!, _projectIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_projectIdMeta);
+    }
+    if (data.containsKey('set_index')) {
+      context.handle(
+        _setIndexMeta,
+        setIndex.isAcceptableOrUnknown(data['set_index']!, _setIndexMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_setIndexMeta);
+    }
+    if (data.containsKey('source_signature')) {
+      context.handle(
+        _sourceSignatureMeta,
+        sourceSignature.isAcceptableOrUnknown(
+          data['source_signature']!,
+          _sourceSignatureMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_sourceSignatureMeta);
+    }
+    if (data.containsKey('called_numbers')) {
+      context.handle(
+        _calledNumbersMeta,
+        calledNumbers.isAcceptableOrUnknown(
+          data['called_numbers']!,
+          _calledNumbersMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_calledNumbersMeta);
+    }
+    if (data.containsKey('started_at')) {
+      context.handle(
+        _startedAtMeta,
+        startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startedAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {projectId, setIndex};
+  @override
+  PlaySession map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlaySession(
+      projectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}project_id'],
+      )!,
+      setIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}set_index'],
+      )!,
+      sourceSignature: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source_signature'],
+      )!,
+      calledNumbers: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}called_numbers'],
+      )!,
+      startedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}started_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PlaySessionsTable createAlias(String alias) {
+    return $PlaySessionsTable(attachedDatabase, alias);
+  }
+}
+
+class PlaySession extends DataClass implements Insertable<PlaySession> {
+  final String projectId;
+  final int setIndex;
+  final String sourceSignature;
+  final String calledNumbers;
+  final DateTime startedAt;
+  final DateTime updatedAt;
+  const PlaySession({
+    required this.projectId,
+    required this.setIndex,
+    required this.sourceSignature,
+    required this.calledNumbers,
+    required this.startedAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['project_id'] = Variable<String>(projectId);
+    map['set_index'] = Variable<int>(setIndex);
+    map['source_signature'] = Variable<String>(sourceSignature);
+    map['called_numbers'] = Variable<String>(calledNumbers);
+    map['started_at'] = Variable<DateTime>(startedAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  PlaySessionsCompanion toCompanion(bool nullToAbsent) {
+    return PlaySessionsCompanion(
+      projectId: Value(projectId),
+      setIndex: Value(setIndex),
+      sourceSignature: Value(sourceSignature),
+      calledNumbers: Value(calledNumbers),
+      startedAt: Value(startedAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory PlaySession.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlaySession(
+      projectId: serializer.fromJson<String>(json['projectId']),
+      setIndex: serializer.fromJson<int>(json['setIndex']),
+      sourceSignature: serializer.fromJson<String>(json['sourceSignature']),
+      calledNumbers: serializer.fromJson<String>(json['calledNumbers']),
+      startedAt: serializer.fromJson<DateTime>(json['startedAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'projectId': serializer.toJson<String>(projectId),
+      'setIndex': serializer.toJson<int>(setIndex),
+      'sourceSignature': serializer.toJson<String>(sourceSignature),
+      'calledNumbers': serializer.toJson<String>(calledNumbers),
+      'startedAt': serializer.toJson<DateTime>(startedAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  PlaySession copyWith({
+    String? projectId,
+    int? setIndex,
+    String? sourceSignature,
+    String? calledNumbers,
+    DateTime? startedAt,
+    DateTime? updatedAt,
+  }) => PlaySession(
+    projectId: projectId ?? this.projectId,
+    setIndex: setIndex ?? this.setIndex,
+    sourceSignature: sourceSignature ?? this.sourceSignature,
+    calledNumbers: calledNumbers ?? this.calledNumbers,
+    startedAt: startedAt ?? this.startedAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  PlaySession copyWithCompanion(PlaySessionsCompanion data) {
+    return PlaySession(
+      projectId: data.projectId.present ? data.projectId.value : this.projectId,
+      setIndex: data.setIndex.present ? data.setIndex.value : this.setIndex,
+      sourceSignature: data.sourceSignature.present
+          ? data.sourceSignature.value
+          : this.sourceSignature,
+      calledNumbers: data.calledNumbers.present
+          ? data.calledNumbers.value
+          : this.calledNumbers,
+      startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlaySession(')
+          ..write('projectId: $projectId, ')
+          ..write('setIndex: $setIndex, ')
+          ..write('sourceSignature: $sourceSignature, ')
+          ..write('calledNumbers: $calledNumbers, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    projectId,
+    setIndex,
+    sourceSignature,
+    calledNumbers,
+    startedAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlaySession &&
+          other.projectId == this.projectId &&
+          other.setIndex == this.setIndex &&
+          other.sourceSignature == this.sourceSignature &&
+          other.calledNumbers == this.calledNumbers &&
+          other.startedAt == this.startedAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class PlaySessionsCompanion extends UpdateCompanion<PlaySession> {
+  final Value<String> projectId;
+  final Value<int> setIndex;
+  final Value<String> sourceSignature;
+  final Value<String> calledNumbers;
+  final Value<DateTime> startedAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const PlaySessionsCompanion({
+    this.projectId = const Value.absent(),
+    this.setIndex = const Value.absent(),
+    this.sourceSignature = const Value.absent(),
+    this.calledNumbers = const Value.absent(),
+    this.startedAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlaySessionsCompanion.insert({
+    required String projectId,
+    required int setIndex,
+    required String sourceSignature,
+    required String calledNumbers,
+    required DateTime startedAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : projectId = Value(projectId),
+       setIndex = Value(setIndex),
+       sourceSignature = Value(sourceSignature),
+       calledNumbers = Value(calledNumbers),
+       startedAt = Value(startedAt),
+       updatedAt = Value(updatedAt);
+  static Insertable<PlaySession> custom({
+    Expression<String>? projectId,
+    Expression<int>? setIndex,
+    Expression<String>? sourceSignature,
+    Expression<String>? calledNumbers,
+    Expression<DateTime>? startedAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (projectId != null) 'project_id': projectId,
+      if (setIndex != null) 'set_index': setIndex,
+      if (sourceSignature != null) 'source_signature': sourceSignature,
+      if (calledNumbers != null) 'called_numbers': calledNumbers,
+      if (startedAt != null) 'started_at': startedAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlaySessionsCompanion copyWith({
+    Value<String>? projectId,
+    Value<int>? setIndex,
+    Value<String>? sourceSignature,
+    Value<String>? calledNumbers,
+    Value<DateTime>? startedAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return PlaySessionsCompanion(
+      projectId: projectId ?? this.projectId,
+      setIndex: setIndex ?? this.setIndex,
+      sourceSignature: sourceSignature ?? this.sourceSignature,
+      calledNumbers: calledNumbers ?? this.calledNumbers,
+      startedAt: startedAt ?? this.startedAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (projectId.present) {
+      map['project_id'] = Variable<String>(projectId.value);
+    }
+    if (setIndex.present) {
+      map['set_index'] = Variable<int>(setIndex.value);
+    }
+    if (sourceSignature.present) {
+      map['source_signature'] = Variable<String>(sourceSignature.value);
+    }
+    if (calledNumbers.present) {
+      map['called_numbers'] = Variable<String>(calledNumbers.value);
+    }
+    if (startedAt.present) {
+      map['started_at'] = Variable<DateTime>(startedAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlaySessionsCompanion(')
+          ..write('projectId: $projectId, ')
+          ..write('setIndex: $setIndex, ')
+          ..write('sourceSignature: $sourceSignature, ')
+          ..write('calledNumbers: $calledNumbers, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $ProjectsTable projects = $ProjectsTable(this);
+  late final $PlaySessionsTable playSessions = $PlaySessionsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [projects];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [projects, playSessions];
 }
 
-typedef $$ProjectsTableCreateCompanionBuilder = ProjectsCompanion Function({
-  required String id,
-  required String name,
-  required String payload,
-  required DateTime updatedAt,
-  Value<int> rowid,
-});
-typedef $$ProjectsTableUpdateCompanionBuilder = ProjectsCompanion Function({
-  Value<String> id,
-  Value<String> name,
-  Value<String> payload,
-  Value<DateTime> updatedAt,
-  Value<int> rowid,
-});
+typedef $$ProjectsTableCreateCompanionBuilder =
+    ProjectsCompanion Function({
+      required String id,
+      required String name,
+      required String payload,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$ProjectsTableUpdateCompanionBuilder =
+    ProjectsCompanion Function({
+      Value<String> id,
+      Value<String> name,
+      Value<String> payload,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
 
 class $$ProjectsTableFilterComposer
     extends Composer<_$AppDatabase, $ProjectsTable> {
@@ -494,10 +928,235 @@ typedef $$ProjectsTableProcessedTableManager =
       Project,
       PrefetchHooks Function()
     >;
+typedef $$PlaySessionsTableCreateCompanionBuilder =
+    PlaySessionsCompanion Function({
+      required String projectId,
+      required int setIndex,
+      required String sourceSignature,
+      required String calledNumbers,
+      required DateTime startedAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$PlaySessionsTableUpdateCompanionBuilder =
+    PlaySessionsCompanion Function({
+      Value<String> projectId,
+      Value<int> setIndex,
+      Value<String> sourceSignature,
+      Value<String> calledNumbers,
+      Value<DateTime> startedAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$PlaySessionsTableFilterComposer
+    extends Composer<_$AppDatabase, $PlaySessionsTable> {
+  $$PlaySessionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get projectId => $composableBuilder(
+    column: $table.projectId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get setIndex => $composableBuilder(
+    column: $table.setIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sourceSignature => $composableBuilder(
+    column: $table.sourceSignature,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get calledNumbers => $composableBuilder(
+    column: $table.calledNumbers,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PlaySessionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PlaySessionsTable> {
+  $$PlaySessionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get projectId => $composableBuilder(
+    column: $table.projectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get setIndex => $composableBuilder(
+    column: $table.setIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sourceSignature => $composableBuilder(
+    column: $table.sourceSignature,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get calledNumbers => $composableBuilder(
+    column: $table.calledNumbers,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PlaySessionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PlaySessionsTable> {
+  $$PlaySessionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get projectId =>
+      $composableBuilder(column: $table.projectId, builder: (column) => column);
+
+  GeneratedColumn<int> get setIndex =>
+      $composableBuilder(column: $table.setIndex, builder: (column) => column);
+
+  GeneratedColumn<String> get sourceSignature => $composableBuilder(
+    column: $table.sourceSignature,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get calledNumbers => $composableBuilder(
+    column: $table.calledNumbers,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$PlaySessionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PlaySessionsTable,
+          PlaySession,
+          $$PlaySessionsTableFilterComposer,
+          $$PlaySessionsTableOrderingComposer,
+          $$PlaySessionsTableAnnotationComposer,
+          $$PlaySessionsTableCreateCompanionBuilder,
+          $$PlaySessionsTableUpdateCompanionBuilder,
+          (
+            PlaySession,
+            BaseReferences<_$AppDatabase, $PlaySessionsTable, PlaySession>,
+          ),
+          PlaySession,
+          PrefetchHooks Function()
+        > {
+  $$PlaySessionsTableTableManager(_$AppDatabase db, $PlaySessionsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlaySessionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlaySessionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlaySessionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> projectId = const Value.absent(),
+                Value<int> setIndex = const Value.absent(),
+                Value<String> sourceSignature = const Value.absent(),
+                Value<String> calledNumbers = const Value.absent(),
+                Value<DateTime> startedAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PlaySessionsCompanion(
+                projectId: projectId,
+                setIndex: setIndex,
+                sourceSignature: sourceSignature,
+                calledNumbers: calledNumbers,
+                startedAt: startedAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String projectId,
+                required int setIndex,
+                required String sourceSignature,
+                required String calledNumbers,
+                required DateTime startedAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => PlaySessionsCompanion.insert(
+                projectId: projectId,
+                setIndex: setIndex,
+                sourceSignature: sourceSignature,
+                calledNumbers: calledNumbers,
+                startedAt: startedAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PlaySessionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PlaySessionsTable,
+      PlaySession,
+      $$PlaySessionsTableFilterComposer,
+      $$PlaySessionsTableOrderingComposer,
+      $$PlaySessionsTableAnnotationComposer,
+      $$PlaySessionsTableCreateCompanionBuilder,
+      $$PlaySessionsTableUpdateCompanionBuilder,
+      (
+        PlaySession,
+        BaseReferences<_$AppDatabase, $PlaySessionsTable, PlaySession>,
+      ),
+      PlaySession,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
   $$ProjectsTableTableManager get projects =>
       $$ProjectsTableTableManager(_db, _db.projects);
+  $$PlaySessionsTableTableManager get playSessions =>
+      $$PlaySessionsTableTableManager(_db, _db.playSessions);
 }

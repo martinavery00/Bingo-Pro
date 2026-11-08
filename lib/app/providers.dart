@@ -1,14 +1,17 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-import '../data/app_database.dart';
+import '../data/app_database.dart' hide PlaySession;
 import '../data/drift_project_repository.dart';
+import '../data/drift_play_session_repository.dart';
 import '../domain/contracts.dart';
 import '../domain/coverage_card_generator.dart';
 import '../domain/models.dart';
+import '../domain/play_session.dart';
 import '../printing/bingo_pdf_exporter.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
@@ -19,6 +22,15 @@ final databaseProvider = Provider<AppDatabase>((ref) {
 
 final projectRepositoryProvider = Provider<ProjectRepository>(
   (ref) => DriftProjectRepository(ref.watch(databaseProvider)),
+);
+
+final playSessionRepositoryProvider = Provider<PlaySessionRepository>(
+  (ref) => DriftPlaySessionRepository(ref.watch(databaseProvider)),
+);
+
+final playSessionsProvider = StreamProvider.family<List<PlaySession>, String>(
+  (ref, projectId) =>
+      ref.watch(playSessionRepositoryProvider).watchForProject(projectId),
 );
 
 final projectListProvider = StreamProvider<List<BingoProject>>(
@@ -61,15 +73,24 @@ class ProjectEditor extends Notifier<BingoProject?> {
   Future<void> rename(String name) =>
       _update(state!.copyWith(name: name.trim()));
 
-  Future<void> setCardCount(int count) =>
-      _update(state!.copyWith(cardCount: count, cards: const []));
+  Future<void> setCardCount(int count) async {
+    if (state!.cardCount == count) {
+      return;
+    }
+    await _discardPlaySessions();
+    await _update(state!.copyWith(cardCount: count, cards: const []));
+  }
 
-  Future<void> setRules(RuleSet rules) {
+  Future<void> setRules(RuleSet rules) async {
     final project = state!;
+    if (jsonEncode(project.rules.toJson()) == jsonEncode(rules.toJson())) {
+      return;
+    }
     final dimensionsChanged =
         project.rules.rows != rules.rows ||
         project.rules.columns != rules.columns;
-    return _update(
+    await _discardPlaySessions();
+    await _update(
       project.copyWith(
         rules: rules,
         patterns: dimensionsChanged
@@ -80,8 +101,14 @@ class ProjectEditor extends Notifier<BingoProject?> {
     );
   }
 
-  Future<void> setPatterns(List<PatternDefinition> patterns) =>
-      _update(state!.copyWith(patterns: patterns, cards: const []));
+  Future<void> setPatterns(List<PatternDefinition> patterns) async {
+    if (jsonEncode(state!.patterns.map((value) => value.toJson()).toList()) ==
+        jsonEncode(patterns.map((value) => value.toJson()).toList())) {
+      return;
+    }
+    await _discardPlaySessions();
+    await _update(state!.copyWith(patterns: patterns, cards: const []));
+  }
 
   Future<void> setTheme(CardThemeConfig theme) =>
       _update(state!.copyWith(theme: theme));
@@ -105,6 +132,7 @@ class ProjectEditor extends Notifier<BingoProject?> {
     final report = OptimizationReport.fromJson(
       payload['report'] as Map<String, dynamic>,
     );
+    await _discardPlaySessions();
     await _update(project.copyWith(seed: seed, cards: cards, report: report));
   }
 
@@ -164,6 +192,15 @@ class ProjectEditor extends Notifier<BingoProject?> {
 
   Future<void> _save() async {
     if (state != null) await ref.read(projectRepositoryProvider).save(state!);
+  }
+
+  Future<void> _discardPlaySessions() async {
+    final project = state;
+    if (project != null) {
+      await ref
+          .read(playSessionRepositoryProvider)
+          .deleteForProject(project.id);
+    }
   }
 }
 

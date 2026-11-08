@@ -11,6 +11,9 @@ class RulesStep extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final project = ref.watch(projectEditorProvider)!;
     final rules = project.rules;
+    final hasSavedGames =
+        ref.watch(playSessionsProvider(project.id)).asData?.value.isNotEmpty ??
+        false;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
@@ -20,6 +23,18 @@ class RulesStep extends ConsumerWidget {
           'Cards are grouped into independent sets of six for each game.',
         ),
         const SizedBox(height: 20),
+        if (hasSavedGames) ...[
+          Card(
+            color: Theme.of(context).colorScheme.secondaryContainer,
+            child: const Padding(
+              padding: EdgeInsets.all(12),
+              child: Text(
+                'Changing card count or rules will end saved games for this project.',
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
         Card(
           child: Padding(
             padding: const EdgeInsets.all(16),

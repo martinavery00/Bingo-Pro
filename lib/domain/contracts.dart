@@ -1,12 +1,21 @@
 import 'dart:typed_data';
 
 import 'models.dart';
+import 'play_session.dart';
 
 abstract interface class ProjectRepository {
   Stream<List<BingoProject>> watchAll();
   Future<BingoProject?> find(String id);
   Future<void> save(BingoProject project);
   Future<void> delete(String id);
+}
+
+abstract interface class PlaySessionRepository {
+  Stream<List<PlaySession>> watchForProject(String projectId);
+  Future<PlaySession?> find(String projectId, int setIndex);
+  Future<void> save(PlaySession session);
+  Future<void> delete(String projectId, int setIndex);
+  Future<void> deleteForProject(String projectId);
 }
 
 class GenerationResult {

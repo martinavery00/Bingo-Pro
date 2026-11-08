@@ -40,8 +40,13 @@ class DriftProjectRepository implements ProjectRepository {
 
   @override
   Future<void> delete(String id) async {
-    await (database.delete(
-      database.projects,
-    )..where((row) => row.id.equals(id))).go();
+    await database.transaction(() async {
+      await (database.delete(
+        database.playSessions,
+      )..where((row) => row.projectId.equals(id))).go();
+      await (database.delete(
+        database.projects,
+      )..where((row) => row.id.equals(id))).go();
+    });
   }
 }

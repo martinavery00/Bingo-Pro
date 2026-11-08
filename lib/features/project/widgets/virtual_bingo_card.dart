@@ -7,12 +7,18 @@ class VirtualBingoCard extends StatelessWidget {
     required this.card,
     required this.rules,
     this.onCellTap,
+    this.markedPositions = const {},
+    this.lastCalledNumber,
+    this.showCalledState = false,
     super.key,
   });
 
   final BingoCard card;
   final RuleSet rules;
   final ValueChanged<CellPosition>? onCellTap;
+  final Set<CellPosition> markedPositions;
+  final int? lastCalledNumber;
+  final bool showCalledState;
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +71,13 @@ class VirtualBingoCard extends StatelessWidget {
                           child: _VirtualCell(
                             cell: card.cellAt(row, column),
                             onTap: onCellTap,
+                            isMarked: markedPositions.contains(
+                              CellPosition(row, column),
+                            ),
+                            isLatest:
+                                card.cellAt(row, column).value ==
+                                lastCalledNumber,
+                            showCalledState: showCalledState,
                           ),
                         ),
                     ],
@@ -79,10 +92,19 @@ class VirtualBingoCard extends StatelessWidget {
 }
 
 class _VirtualCell extends StatelessWidget {
-  const _VirtualCell({required this.cell, this.onTap});
+  const _VirtualCell({
+    required this.cell,
+    required this.isMarked,
+    required this.isLatest,
+    required this.showCalledState,
+    this.onTap,
+  });
 
   final CardCell cell;
   final ValueChanged<CellPosition>? onTap;
+  final bool isMarked;
+  final bool isLatest;
+  final bool showCalledState;
 
   @override
   Widget build(BuildContext context) {
@@ -93,14 +115,23 @@ class _VirtualCell extends StatelessWidget {
       button: interactive,
       label: cell.isFree
           ? label
+          : showCalledState
+          ? '$label, ${isMarked ? 'called' : 'not called'}'
           : '$label, ${cell.isLocked ? 'locked' : 'unlocked'}',
       child: Material(
-        color: cell.isFree ? colors.tertiaryContainer : colors.surface,
+        color: cell.isFree
+            ? colors.tertiaryContainer
+            : isMarked
+            ? colors.primaryContainer
+            : colors.surface,
         child: InkWell(
           onTap: interactive ? () => onTap!(cell.position) : null,
           child: DecoratedBox(
             decoration: BoxDecoration(
-              border: Border.all(color: colors.outlineVariant),
+              border: Border.all(
+                color: isLatest ? colors.primary : colors.outlineVariant,
+                width: isLatest ? 3 : 1,
+              ),
             ),
             child: Stack(
               children: [
@@ -113,6 +144,8 @@ class _VirtualCell extends StatelessWidget {
                         style: TextStyle(
                           color: cell.isFree
                               ? colors.onTertiaryContainer
+                              : isMarked
+                              ? colors.onPrimaryContainer
                               : colors.onSurface,
                           fontSize: cell.isFree ? 17 : 24,
                           fontWeight: FontWeight.w800,

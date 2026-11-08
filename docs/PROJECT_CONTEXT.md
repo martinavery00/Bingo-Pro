@@ -21,9 +21,11 @@ The app opens to a local project list. Creating or opening a project enters a fo
 1. **Rules** — choose 1–18 cards, standard 75-ball rules, or a custom 3×3–7×7 grid with editable labels/ranges and free cells.
 2. **Patterns** — use the default row/column/diagonal masks or draw named masks. Rotations and reflections are explicit; 90°/270° rotation is available only for square grids.
 3. **Style** — select bundled fonts and presets or edit colors, inner/outer lines, free-space label, paper, orientation, margins, gutters, page grid, cut marks, and exact card dimensions.
-4. **Cards** — validate and generate diversified sets, inspect one optimizer group of up to six cards at a time, open a full-screen card viewer, explicitly edit regeneration locks, review collapsed coverage details, reproduce the saved seed, generate a new batch, or open the print preview.
+4. **Cards** — validate and generate diversified sets, inspect one optimizer group of up to six cards at a time, open a full-screen card viewer, start or resume a local Play Set session, explicitly edit regeneration locks, review collapsed coverage details, reproduce the saved seed, generate a new batch, or open the print preview.
 
-Before generation, Cards presents a compact rules/pattern/card-count summary and the validation or generation state. After generation, it prioritizes a responsive card overview with a set selector when the project contains more than six cards. Opening a card uses the full screen and supports swiping only within its optimizer set. The virtual viewer is view-only: normal card and cell taps never record game state.
+Before generation, Cards presents a compact rules/pattern/card-count summary and the validation or generation state. After generation, it prioritizes a responsive card overview with a set selector when the project contains more than six cards. Opening a card uses the full screen and supports swiping only within its optimizer set. The ordinary virtual viewer remains view-only: normal card and cell taps never record game state.
+
+Play Set is a separate, explicit gameplay mode for one optimizer set of up to six cards. It opens on a Numbers tab that shows every configured column together; tapping the board records or removes called numbers and automatically marks every matching card. An always-visible Almost complete section groups one-away patterns by the exact missing number and names each affected card and pattern variant. A separate Cards tab shows all cards in a compact responsive overview, with a readable swipeable detail view on tap. Completed patterns are celebrated without ending the game, and one resumable local session is autosaved per set. Free cells are visually neutral and excluded from pattern requirements; a pattern variant containing only free cells is ignored. Called-number order is retained, but marks and wins are always derived from the current calls.
 
 Virtual cards preserve the generated values, column labels, free cells, set membership, and stable card identifiers, but use an accessibility-oriented screen treatment with larger type and strong contrast instead of reproducing the selected print theme. The vector PDF preview remains the print-faithful representation and the authority for exact layout and dimensions. Full-card and numbered-cell locks are available only through an explicit Edit locks mode so browsing cannot accidentally alter regeneration state.
 
@@ -70,14 +72,17 @@ Important types:
 - `OptimizationReport`: coverage score, frequency data, pair overlap, pattern overlap, and truthful warning text.
 - `CardThemeConfig`: bundled font, colors, labels, and inner/outer line weights.
 - `PrintLayoutConfig`: paper, units, exact/auto sizing, margins, gutters, grid, and cut marks.
+- `PlaySession`: local per-set called-number order and source signature; it is not part of the project archive.
+- `PlayEvaluation`: derived marked cells, one-away patterns, and completed pattern variants.
 
 The domain layer does not import Flutter. Heavy card generation runs through `compute` so the UI isolate remains responsive. PDF output is vector-based and uses the same bundled font assets as the on-screen preview.
 
 ## Persistence and compatibility
 
-- Drift database schema version: 1.
+- Drift database schema version: 2.
 - Project/archive schema version: 1.
 - The database stores the project aggregate as JSON plus indexed identity/name/update metadata.
+- Resumable play sessions are stored in a separate local Drift table keyed by project and set. They are deliberately excluded from `.bingopro` export/import.
 - Archive checksums are SHA-256 over the encoded payload.
 - Archive import validates the checksum, schema, card-count bounds, and rules before saving.
 - Bundled font files and license texts under `assets/` are part of the distributable source and must remain together.
@@ -105,8 +110,8 @@ Bundled fonts are Atkinson Hyperlegible, Noto Sans, and Roboto Slab. Do not repl
 The current baseline is:
 
 - `flutter analyze`: clean.
-- 25 automated tests: passing.
-- Tests cover rules, transforms, 18-card validity/balance/uniqueness, reproducibility, score monotonicity, custom grid sizes, lock preservation, archive tampering, bundled PDF fonts, PDF/calibration generation, performance, the home-screen empty state, and the four-destination Cards/viewer workflow.
+- 36 automated tests: passing.
+- Tests cover rules, transforms, 18-card validity/balance/uniqueness, reproducibility, score monotonicity, custom grid sizes, lock preservation, play evaluation/session persistence, archive tampering, bundled PDF fonts, PDF/calibration generation, performance, the home-screen empty state, and the four-destination Cards/viewer/play workflow.
 - Default 18-card generation with ten line patterns completes within the three-second test target on the development host.
 - Android debug APK builds successfully at `build/app/outputs/flutter-apk/app-debug.apk`.
 
@@ -126,7 +131,7 @@ For generator changes, prefer fixed seeds and invariant assertions over snapshot
 ## Explicit non-goals for v1
 
 - Accounts, cloud synchronization, collaboration, analytics, ads, or remote services
-- Bingo calling/draw management, digital daub tracking, called-number history, resumable game sessions, or multiplayer session administration
+- Bingo caller automation, random/managed number drawing, voice recognition, multiplayer session administration, or shared game synchronization
 - Word/phrase/image bingo cards
 - Claims of guaranteed or precisely quantified winning advantage
 - Large organizer runs beyond 18 cards

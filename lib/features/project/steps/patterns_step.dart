@@ -12,6 +12,9 @@ class PatternsStep extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final project = ref.watch(projectEditorProvider)!;
+    final hasSavedGames =
+        ref.watch(playSessionsProvider(project.id)).asData?.value.isNotEmpty ??
+        false;
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
@@ -39,6 +42,18 @@ class PatternsStep extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 16),
+        if (hasSavedGames) ...[
+          Card(
+            color: Theme.of(context).colorScheme.secondaryContainer,
+            child: const Padding(
+              padding: EdgeInsets.all(12),
+              child: Text(
+                'Changing winning patterns will end saved games for this project.',
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
         if (project.patterns.isEmpty)
           Card(
             color: Theme.of(context).colorScheme.errorContainer,

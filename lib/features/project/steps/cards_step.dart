@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../domain/models.dart';
+import '../../../domain/play_session.dart';
 import '../card_viewer_screen.dart';
 import '../pdf_preview_screen.dart';
+import '../play_set_screen.dart';
 import '../widgets/virtual_bingo_card.dart';
 
 enum _GenerationAction { newBatch, repeatSeed }
@@ -25,6 +27,8 @@ class _CardsStepState extends ConsumerState<CardsStep> {
   @override
   Widget build(BuildContext context) {
     final project = ref.watch(projectEditorProvider)!;
+    final playSessions =
+        ref.watch(playSessionsProvider(project.id)).asData?.value ?? const [];
     final errors = _validationErrors(project);
     if (project.cards.isEmpty) {
       return _EmptyCards(
@@ -42,6 +46,11 @@ class _CardsStepState extends ConsumerState<CardsStep> {
     final visibleCards =
         project.cards.where((card) => card.setIndex == selectedSet).toList()
           ..sort((a, b) => a.cardIndex.compareTo(b.cardIndex));
+    final resumable = playSessions.any(
+      (session) =>
+          session.setIndex == selectedSet &&
+          session.sourceSignature == playSourceSignature(project, selectedSet),
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) => ListView(
@@ -68,15 +77,27 @@ class _CardsStepState extends ConsumerState<CardsStep> {
                 ),
               ),
               const SizedBox(width: 8),
-              FilledButton.tonalIcon(
-                key: const ValueKey('print-cards'),
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => PdfPreviewScreen(project: project),
+              Column(
+                children: [
+                  FilledButton.icon(
+                    key: const ValueKey('play-set'),
+                    onPressed: _editLocks ? null : () => _openPlay(selectedSet),
+                    icon: Icon(
+                      resumable ? Icons.play_circle_outline : Icons.play_arrow,
+                    ),
+                    label: Text(resumable ? 'Resume game' : 'Play set'),
                   ),
-                ),
-                icon: const Icon(Icons.print_outlined),
-                label: const Text('Print'),
+                  IconButton(
+                    key: const ValueKey('print-cards'),
+                    tooltip: 'Print cards',
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => PdfPreviewScreen(project: project),
+                      ),
+                    ),
+                    icon: const Icon(Icons.print_outlined),
+                  ),
+                ],
               ),
             ],
           ),
@@ -255,6 +276,12 @@ class _CardsStepState extends ConsumerState<CardsStep> {
     );
   }
 
+  Future<void> _openPlay(int setIndex) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => PlaySetScreen(setIndex: setIndex)),
+    );
+  }
+
   Future<void> _handleGenerationAction(_GenerationAction action) async {
     final repeat = action == _GenerationAction.repeatSeed;
     final confirmed = await _confirmReplacement(
@@ -283,25 +310,33 @@ class _CardsStepState extends ConsumerState<CardsStep> {
     required String title,
     required String message,
     required String action,
-  }) async =>
-      await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(title),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(action),
-            ),
-          ],
-        ),
-      ) ??
-      false;
+  }) async {
+    final project = ref.read(projectEditorProvider)!;
+    final hasSavedGames =
+        ref.read(playSessionsProvider(project.id)).asData?.value.isNotEmpty ??
+        false;
+    final fullMessage = hasSavedGames
+        ? '$message\n\nThis will also end all saved games for this project.'
+        : message;
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(title),
+            content: Text(fullMessage),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(action),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
 
   Future<void> _generate({required bool keepSeed}) async {
     setState(() {
